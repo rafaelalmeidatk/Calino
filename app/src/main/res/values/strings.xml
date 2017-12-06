@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Cal.ino</string>
+
+    <string name="connection_status_label">Status:\u0020</string>
+    <string name="open_connection_status">Connected</string>
+    <string name="closed_connection_status">Disconnected</string>
+
+    <!-- Buttons -->
+    <string name="openConnectionButton">Open</string>
+    <string name="closeConnectionButton">Close</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
