@@ -71,6 +71,7 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
     }
 
     private fun setConnectionState(state: ConnectionStateEnum) {
+
         connectionState = state
         val connected = state == ConnectionStateEnum.OPEN
 
@@ -180,20 +181,27 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
         }
     }
 
+    var datastream = ""
+
     internal val receiveDataCallback = UsbSerialInterface.UsbReadCallback { arg0 ->
         val data: String?
         try {
             data = String(arg0, Charset.defaultCharset())
-            if (data != "") {
-                onDataReceived(data)
+            datastream += data
+            for (byt in arg0) {
+                if (byt == (0xA).toByte()) {
+                    onDataReceived(datastream)
+                    datastream = ""
+                    continue
+                }
             }
-            catLog(data)
         } catch (e: UnsupportedEncodingException) {
             e.printStackTrace()
         }
     }
 
     private fun onDataReceived(data: String) {
+        catLog(data)
         runOnUiThread({ mListener?.onReceiveData(data) })
     }
 
