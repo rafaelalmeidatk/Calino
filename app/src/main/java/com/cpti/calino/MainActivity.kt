@@ -190,7 +190,8 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
             datastream += data
             for (byt in arg0) {
                 if (byt == (0xA).toByte()) {
-                    onDataReceived(datastream)
+                    parseStream(datastream)
+                    sendDataToFragmentListeners()
                     datastream = ""
                     continue
                 }
@@ -200,9 +201,34 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
         }
     }
 
-    private fun onDataReceived(data: String) {
-        catLog(data)
-        runOnUiThread({ mListener?.onReceiveData(data) })
+    private var streamData: HashMap<Int, MutableList<Float>> = HashMap()
+
+    private fun parseStream(stream: String) {
+        streamData.clear()
+        val rg = "\\{\\{((?:\\[\\d+,\\d+\\])+)\\}\\}".toRegex()
+        val match = rg.findAll(stream)
+        for (res in match.iterator()) {
+            res.groups[1]?.let { group ->
+                val pairsRg = "\\[(\\d+),(\\d+)\\]".toRegex()
+                val pairs = group.value
+                val pairsMatch = pairsRg.findAll(pairs)
+                for (pairsRes in pairsMatch) {
+                    val id = pairsRes.groupValues[1].toInt()
+                    val value = pairsRes.groupValues[2].toFloat()
+                    streamData.getOrPut(id, {mutableListOf()}).add(value)
+                }
+            }
+        }
+        catLog(streamData.toString())
+    }
+
+    private fun sendDataToFragmentListeners() {
+        mListener?.let { listener ->
+            val deviceId = listener.getDeviceId()
+            if (streamData.containsKey(deviceId)) {
+                runOnUiThread { mListener?.onReceiveData(streamData[deviceId]!!.toList()) }
+            }
+        }
     }
 
     private fun catLog(text: String) {
@@ -210,6 +236,7 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
     }
 
     interface OnReceiveDataListener {
-        fun onReceiveData(data: String)
+        fun getDeviceId(): Int
+        fun onReceiveData(data: List<Float>)
     }
 }
