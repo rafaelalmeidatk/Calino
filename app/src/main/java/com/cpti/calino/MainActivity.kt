@@ -10,6 +10,7 @@ import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.util.Log
@@ -18,8 +19,10 @@ import com.cpti.calino.enums.DeviceTypeEnum
 import com.cpti.calino.fragments.dummy.DeviceListFragment
 import com.cpti.calino.fragments.dummy.IncreaseCounterDeviceFragment
 import com.cpti.calino.fragments.dummy.data.DeviceContent
+import com.cpti.calino.model.DeviceData
 import com.felhr.usbserial.UsbSerialDevice
 import com.felhr.usbserial.UsbSerialInterface
+import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
@@ -41,6 +44,7 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Usb Manager
         usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
 
         openConnectionBtn.setOnClickListener({ startCommunication() })
@@ -181,6 +185,19 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
         }
     }
 
+    private fun sendDataToArduino() {
+        val realm = Realm.getDefaultInstance()
+        realm.refresh()
+        var data = "{"
+        val devicesData = realm.where(DeviceData::class.java).findAll()
+        for (deviceData in devicesData) {
+            data += "[${deviceData.id},${deviceData.value}]"
+        }
+        data += "}"
+        catLog("sending to arduino: $data")
+        serialPort?.write(data.toByteArray())
+    }
+
     var datastream = ""
 
     internal val receiveDataCallback = UsbSerialInterface.UsbReadCallback { arg0 ->
@@ -190,9 +207,14 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
             datastream += data
             for (byt in arg0) {
                 if (byt == (0xA).toByte()) {
-                    parseStream(datastream)
-                    sendDataToFragmentListeners()
-                    datastream = ""
+                    if (isDataRequest(datastream)) {
+                        catLog("datastream: $datastream")
+                        sendDataToArduino()
+                    } else {
+                        parseStream(datastream)
+                        sendDataToFragmentListeners()
+                        datastream = ""
+                    }
                     continue
                 }
             }
@@ -201,9 +223,16 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
         }
     }
 
+    private fun isDataRequest(stream: String): Boolean {
+        val rg = Regex(".?\\{data\\}.?")
+        val match = rg.findAll(stream)
+        return match.any()
+    }
+
     private var streamData: HashMap<Int, MutableList<Float>> = HashMap()
 
     private fun parseStream(stream: String) {
+        catLog("parseStream: $stream")
         streamData.clear()
         val rg = "\\{\\{((?:\\[\\d+,\\d+\\])+)\\}\\}".toRegex()
         val match = rg.findAll(stream)
