@@ -33,6 +33,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/closeConnectionButton" />
+
+        <Button
+            android:id="@+id/resetConnectionBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/resetConnectionButton" />
     </LinearLayout>
 
     <FrameLayout

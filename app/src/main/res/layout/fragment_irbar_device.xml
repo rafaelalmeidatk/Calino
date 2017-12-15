@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.cpti.calino.fragments.IncreaseCounterDeviceFragment">
+    tools:context="com.cpti.calino.fragments.IRBarDeviceFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,19 +12,19 @@
         android:orientation="horizontal">
 
         <SeekBar
-            android:id="@+id/increase_counter_seekbar"
+            android:id="@+id/irbar_seekbar"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content" />
 
         <TextView
-                android:id="@+id/increase_counter_seekbar_value"
+            android:id="@+id/irbar_seekbar_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
 
     <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/increase_counter_barchart"
+        android:id="@+id/irbar_barchart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />

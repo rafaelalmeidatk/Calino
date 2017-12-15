@@ -14,11 +14,13 @@ import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.util.Log
+import android.widget.Toast
 import com.cpti.calino.enums.ConnectionStateEnum
 import com.cpti.calino.enums.DeviceTypeEnum
-import com.cpti.calino.fragments.dummy.DeviceListFragment
-import com.cpti.calino.fragments.dummy.IncreaseCounterDeviceFragment
-import com.cpti.calino.fragments.dummy.data.DeviceContent
+import com.cpti.calino.fragments.IRBarDeviceFragment
+import com.cpti.calino.fragments.DeviceListFragment
+import com.cpti.calino.fragments.IncreaseCounterDeviceFragment
+import com.cpti.calino.fragments.data.DeviceContent
 import com.cpti.calino.model.DeviceData
 import com.felhr.usbserial.UsbSerialDevice
 import com.felhr.usbserial.UsbSerialInterface
@@ -49,6 +51,7 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
 
         openConnectionBtn.setOnClickListener({ startCommunication() })
         closeConnectionBtn.setOnClickListener({ stopCommunication() })
+        resetConnectionBtn.setOnClickListener({ resetCommunication() })
 
         setConnectionState(ConnectionStateEnum.CLOSED)
 
@@ -111,6 +114,8 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
         when(item.type) {
             DeviceTypeEnum.INCREASE_COUNTER_DEVICE ->
                 changeDeviceFragment(IncreaseCounterDeviceFragment.newInstance())
+            DeviceTypeEnum.IRBAR_DEVICE ->
+                changeDeviceFragment(IRBarDeviceFragment.newInstance())
         }
     }
 
@@ -119,6 +124,7 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
             if (intent == null) {
                 return
             }
+            catLog("on receive, " + intent.action)
             if (intent.action == ACTION_USB_PERMISSION) {
                 catLog("usb permission request")
                 val granted = intent.extras.getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED)
@@ -140,11 +146,13 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
                         }
                     }
                 } else {
-                    catLog("Perm not granted")
+                    Toast.makeText(applicationContext, getString(R.string.permission_not_granted), Toast.LENGTH_SHORT).show()
                 }
             } else if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) {
                 catLog("broadcastReceive attach")
-                startCommunication()
+                Handler().postDelayed({
+                    runOnUiThread { startCommunication() }
+                }, 100)
             } else if (intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED) {
                 catLog("broad detached")
                 stopCommunication()
@@ -169,7 +177,7 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
                 }
             }
         } else {
-            catLog("no device found!")
+            Toast.makeText(this, getString(R.string.no_device_found), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -183,6 +191,12 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
             sp.close()
             catLog("Serial connection closed!")
         }
+    }
+
+    private fun resetCommunication() {
+        catLog("resetCommunication")
+        stopCommunication()
+        startCommunication()
     }
 
     private fun sendDataToArduino() {
@@ -213,8 +227,8 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
                     } else {
                         parseStream(datastream)
                         sendDataToFragmentListeners()
-                        datastream = ""
                     }
+                    datastream = ""
                     continue
                 }
             }
@@ -255,7 +269,13 @@ class MainActivity : AppCompatActivity(), DeviceListFragment.OnDeviceChosenListe
         mListener?.let { listener ->
             val deviceId = listener.getDeviceId()
             if (streamData.containsKey(deviceId)) {
-                runOnUiThread { mListener?.onReceiveData(streamData[deviceId]!!.toList()) }
+                catLog("device id: $deviceId stream data: ${streamData[deviceId]} listener: $mListener")
+                val finalStreamData = streamData[deviceId]!!.toList()
+                runOnUiThread {
+                    mListener?.onReceiveData(
+                            finalStreamData
+                    )
+                }
             }
         }
     }

@@ -4,11 +4,15 @@
     <string name="connection_status_label">Status:\u0020</string>
     <string name="open_connection_status">Connected</string>
     <string name="closed_connection_status">Disconnected</string>
+    <string name="no_device_found">No device found!</string>
+    <string name="permission_not_granted">Permission not granted!</string>
 
     <!-- Buttons -->
     <string name="openConnectionButton">Open</string>
     <string name="closeConnectionButton">Close</string>
+    <string name="resetConnectionButton">Reset</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- Devices -->
+    <string name="increase_counter_device_name">Increase Counter Device</string>
+    <string name="ir_bar_device_name">IR Bar Device</string>
 </resources>

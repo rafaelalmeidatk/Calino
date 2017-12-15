@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="open_connection_status">Conectado</string>
+    <string name="closed_connection_status">Desconectado</string>
+    <string name="no_device_found">Nenhum dispositivo encontrado!</string>
+    <string name="permission_not_granted">Permissão não concedida!</string>
+
+    <!-- Buttons -->
+    <string name="openConnectionButton">Conectar</string>
+    <string name="closeConnectionButton">Desconectar</string>
+    <string name="resetConnectionButton">Reiniciar</string>
+
+    <!-- Devices -->
+    <string name="increase_counter_device_name">Contador com Autoincremento</string>
+    <string name="ir_bar_device_name">Barra de Sensores Infravermelhos</string>
+</resources>
